@@ -15,6 +15,7 @@ use pnet::packet::ip::IpNextHeaderProtocols;
 
 use std::net::{UdpSocket, SocketAddr};
 use std::error::Error;
+use std::env::args;
 
 use fake_dns::dns::{message, parser, serializer};
 
@@ -23,7 +24,9 @@ fn main() {
 }
 
 fn sniff() -> Result<(), Box<Error>> {
-    let device_name = "en1";
+    let socket = UdpSocket::bind(SocketAddr::from(([0,0,0,0], 0))).expect("couldn't bind to address");
+
+    let device_name = &args().collect::<Vec<_>>()[1];
     let mut cap = init_capture(device_name.to_string())?;
     loop {
         while let Ok(packet) = cap.next() {
@@ -52,7 +55,9 @@ fn sniff() -> Result<(), Box<Error>> {
                 }
             );
             let dns_bytes = serializer::serialize(dns_message);
-            println!("{:?}", dns_bytes);
+            let dest = SocketAddr::from((ip_packet.get_source(), udp_packet.get_source()));
+            socket.send_to(&dns_bytes, dest.clone()).expect("couldn't send packet");
+            println!("sent to {:?}!", dest);
         }
     }
 }
