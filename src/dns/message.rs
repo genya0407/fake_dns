@@ -55,7 +55,7 @@ impl fmt::Display for AnswerSection {
 }
 
 #[derive(Debug)]
-pub struct DnsMessage {
+pub struct Message {
     pub id: u16,
     pub head: u16,
     pub query_sections: Vec<QuerySection>,
@@ -64,7 +64,7 @@ pub struct DnsMessage {
     pub additional_information_sections: Vec<AnswerSection>,
 }
 
-impl fmt::Display for DnsMessage {
+impl fmt::Display for Message {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         let mut string = String::from("");
         for section in &self.query_sections {

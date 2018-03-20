@@ -26,13 +26,17 @@ fn sniff() -> Result<(), Box<Error>> {
     loop {
         while let Ok(packet) = cap.next() {
             if let Ok(dns_message) = parse_dns(packet.data) {
+                let mut serializer = fake_dns::dns::serializer::Serializer::new();
+                let bytes = serializer.serialize(dns_message);
+                let mut parser = fake_dns::dns::parser::Parser::new(bytes);
+                let dns_message = parser.parse();
                 println!("{}", dns_message);
             }
         }
     }
 }
 
-fn parse_dns(data: &[u8]) -> Result<fake_dns::dns::message::DnsMessage, Box<Error>> {
+fn parse_dns(data: &[u8]) -> Result<fake_dns::dns::message::Message, Box<Error>> {
     let eth_packet: EthernetPacket = EthernetPacket::new(&data).ok_or(static_err("Parse ethernet failed."))?;
     let ip_packet: Ipv4Packet = Ipv4Packet::new(eth_packet.payload()).ok_or(static_err("Parse ipv4 failed."))?;
     let udp_packet: UdpPacket = if ip_packet.get_next_level_protocol() == IpNextHeaderProtocols::Udp {
@@ -43,6 +47,7 @@ fn parse_dns(data: &[u8]) -> Result<fake_dns::dns::message::DnsMessage, Box<Erro
     if !(udp_packet.get_destination() == 53 || udp_packet.get_source() == 53) {
         return Err(static_err("Not dns packet."));
     }
+
     let mut parser = fake_dns::dns::parser::Parser::new(udp_packet.payload().to_vec());
     let dns_message = parser.parse();
 

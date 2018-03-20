@@ -11,7 +11,7 @@ impl Parser {
         Self { data: data, peak: 0 }
     }
 
-    pub fn parse(&mut self) -> message::DnsMessage {
+    pub fn parse(&mut self) -> message::Message {
         let id = self.read_u16();
         let head = self.read_u16();
         let qd_count = self.read_u16() as usize;
@@ -21,10 +21,10 @@ impl Parser {
 
         let query_sections = self.parse_query_sections(qd_count);
         let answer_sections = self.parse_answer_sections(an_count);
-        let authority_sections = self.parse_authority_sections(ns_count);
-        let additional_information_sections = self.parse_additional_information_sections(ar_count);
+        let authority_sections = self.parse_answer_sections(ns_count);
+        let additional_information_sections = self.parse_answer_sections(ar_count);
 
-        return message::DnsMessage {
+        return message::Message {
             id: id,
             head: head,
             query_sections: query_sections,
@@ -36,7 +36,7 @@ impl Parser {
 
     fn parse_query_sections(&mut self, count: usize) -> Vec<message::QuerySection> {
         let mut query_sections = vec![];
-        for i in 0..count {
+        for _ in 0..count {
             let qname = self.parse_name();
             let qtype = self.read_u16();
             let qclass = self.read_u16();
@@ -54,34 +54,12 @@ impl Parser {
     fn parse_answer_sections(&mut self, count: usize) -> Vec<message::AnswerSection> {
         let mut answer_sections = vec![];
 
-        for i in 0..count {
+        for _ in 0..count {
             let answer_section = self.parse_answer_section();
             answer_sections.push(answer_section);
         }
 
         return answer_sections;
-    }
-
-    fn parse_authority_sections(&mut self, count: usize) -> Vec<message::AnswerSection> {
-        let mut authority_sections = vec![];
-
-        for _ in 0..count {
-            let authority_section = self.parse_answer_section();
-            authority_sections.push(authority_section);
-        }
-
-        return authority_sections;
-    }
-
-    fn parse_additional_information_sections(&mut self, count: usize) -> Vec<message::AnswerSection> {
-        let mut additional_information_sections = vec![];
-
-        for _ in 0..count {
-            let additional_information_section = self.parse_answer_section();
-            additional_information_sections.push(additional_information_section);
-        }
-
-        return additional_information_sections;
     }
 
     fn parse_answer_section(&mut self) -> message::AnswerSection {
@@ -142,22 +120,6 @@ impl Parser {
         return (self.read_peak_static() & 0b1100_0000) == 0b1100_0000;
     }
 
-    fn name_offset(&mut self) -> usize {
-        return (self.read_u16() & 0x3fff) as usize;
-    }
-
-    fn read_u16(&mut self) -> u16 {
-        self.read_peak_slice(2).read_u16::<BE>().expect("Failed to read u16.")
-    }
-
-    fn read_u32(&mut self) -> u32 {
-        self.read_peak_slice(4).read_u32::<BE>().expect("Failed to read u32.")
-    }
-
-    fn read_rest_static(&self) -> &[u8] {
-        return &self.data[self.peak..]
-    }
-
     fn read_peak_slice(&mut self, len: usize) -> &[u8] {
         let result = &self.data[self.peak..=(self.peak+len-1)];
         self.peak += len;
@@ -178,7 +140,11 @@ impl Parser {
         self.peak += 1;
     }
 
-    fn read(&self, start: usize, len: usize) -> &[u8] {
-        &self.data[start..=(start+len-1)]
+    fn read_u16(&mut self) -> u16 {
+        self.read_peak_slice(2).read_u16::<BE>().expect("Failed to read u16.")
+    }
+
+    fn read_u32(&mut self) -> u32 {
+        self.read_peak_slice(4).read_u32::<BE>().expect("Failed to read u32.")
     }
 }
