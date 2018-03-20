@@ -6,3 +6,5 @@ authors = ["Yusuke Sangenya <longinus.eva@gmail.com>"]
 [dependencies]
 dns-parser = "0.7.1"
 pnet = "0.21.0"
+pcap = "0.7.0"
+string-error = "0.1.0"
