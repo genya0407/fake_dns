@@ -4,7 +4,8 @@ version = "0.1.0"
 authors = ["Yusuke Sangenya <longinus.eva@gmail.com>"]
 
 [dependencies]
-dns-parser = "0.7.1"
+byteorder = "1.2.1"
+hex-slice = "0.1.2"
 pnet = "0.21.0"
 pcap = "0.7.0"
 string-error = "0.1.0"
