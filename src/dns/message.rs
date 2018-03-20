@@ -64,6 +64,12 @@ pub struct Message {
     pub additional_information_sections: Vec<AnswerSection>,
 }
 
+impl Message {
+    pub fn is_query(&self) -> bool {
+        (self.head & 0x80) == 0
+    }
+}
+
 impl fmt::Display for Message {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         let mut string = String::from("");

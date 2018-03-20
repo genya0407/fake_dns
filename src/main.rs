@@ -26,11 +26,9 @@ fn sniff() -> Result<(), Box<Error>> {
     loop {
         while let Ok(packet) = cap.next() {
             if let Ok(dns_message) = parse_dns(packet.data) {
-                let mut serializer = fake_dns::dns::serializer::Serializer::new();
-                let bytes = serializer.serialize(dns_message);
-                let mut parser = fake_dns::dns::parser::Parser::new(bytes);
-                let dns_message_neo = parser.parse();
-                println!("{}", dns_message_neo);
+                if dns_message.is_query() {
+                    println!("{}", dns_message);
+                }
             }
         }
     }
