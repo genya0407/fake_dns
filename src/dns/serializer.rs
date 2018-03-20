@@ -33,7 +33,7 @@ impl Serializer {
     fn write_answer_sections(&mut self, sections: Vec<message::AnswerSection>) {
         for section in sections {
             self.write_answer_section(section);
-        }        
+        }
     }
 
     fn write_query_section(&mut self, section: message::QuerySection) {
@@ -47,25 +47,33 @@ impl Serializer {
         self.write_u16(section.atype);
         self.write_u16(section.aclass);
         self.write_u32(section.ttl);
-        self.write_u16(section.rdlength);
-        self.write_rdata(section.rdata);
+
+        let rdata_bytes = self.generate_rdata_bytes(section.rdata);
+        self.write_u16(rdata_bytes.len() as u16);
+        self.write_bytes(rdata_bytes);
     }
 
     fn write_name(&mut self, labels: Vec<String>) {
-        for label in labels {
-            self.write_u8(label.len() as u8);
-            for c in label.as_bytes() {
-                self.write_u8(*c)
-            }
-        }
-        self.write_u8(0x00)
+        let bytes = self.generate_name_bytes(labels);
+        self.write_bytes(bytes);
     }
 
-    fn write_rdata(&mut self, rdata: message::RData) {
+    fn generate_name_bytes(&mut self, labels: Vec<String>) -> Vec<u8> {
+        let mut bytes = Vec::new();
+        for label in labels {
+            bytes.write_u8(label.len() as u8);
+            bytes.extend(label.as_bytes());
+        }
+        bytes.write_u8(0x00);
+
+        return bytes;
+    }
+
+    fn generate_rdata_bytes(&mut self, rdata: message::RData) -> Vec<u8> {
         match rdata {
-            message::RData::Cname(name) => self.write_name(name),
+            message::RData::Cname(name) => self.generate_name_bytes(name),
             message::RData::Ipv4(bytes) |
-            message::RData::Unknown(bytes) => self.write_bytes(bytes),
+            message::RData::Unknown(bytes) => bytes,
         }
     }
 

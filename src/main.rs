@@ -29,8 +29,8 @@ fn sniff() -> Result<(), Box<Error>> {
                 let mut serializer = fake_dns::dns::serializer::Serializer::new();
                 let bytes = serializer.serialize(dns_message);
                 let mut parser = fake_dns::dns::parser::Parser::new(bytes);
-                let dns_message = parser.parse();
-                println!("{}", dns_message);
+                let dns_message_neo = parser.parse();
+                println!("{}", dns_message_neo);
             }
         }
     }
