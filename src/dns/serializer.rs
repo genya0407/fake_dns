@@ -1,6 +1,11 @@
 use dns::message;
 use byteorder::{BE, WriteBytesExt};
 
+pub fn serialize(msg: message::Message) -> Vec<u8> {
+    let serializer = Serializer::new();
+    serializer.serialize(msg)
+}
+
 pub struct Serializer {
     data: Vec<u8>
 }

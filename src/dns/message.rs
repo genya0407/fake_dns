@@ -68,6 +68,15 @@ impl Message {
     pub fn is_query(&self) -> bool {
         (self.head & 0x80) == 0
     }
+
+    pub fn set_answer(&mut self, section: AnswerSection) {
+        self.set_answer_flag();
+        self.answer_sections.push(section);
+    }
+
+    fn set_answer_flag(&mut self) {
+        self.head = self.head | 0x80
+    }
 }
 
 impl fmt::Display for Message {
